@@ -1,23 +1,45 @@
-%__pyvenv %{buildroot}/opt/venvs/%{name}/bin/python3
-%__pyvenvpip3 %{buildroot}/opt/venvs/%{name}/bin/pip3
-%__pyvenv_root %{buildroot}/opt/venvs/%{name}
+%__pyvenv_root /opt/venvs/%{name}
 
-%pyvenv_create() %{expand:\\\
-  mkdir -p %{buildroot}/opt/venvs/
+%__pyvenv3 %{buildroot}/%{__pyvenv_root}/bin/python3
+%__pyvenvpip3 %{buildroot}/%{__pyvenv_root}/bin/pip3
+
+%__pyvenv2 %{buildroot}/%{__pyvenv_root}/bin/python2
+%__pyvenvpip2 %{buildroot}/%{__pyvenv_root}/bin/pip
+
+%pyvenv_create_3() %{expand:\\\
+  mkdir -p %{buildroot}/%{__pyvenv_root}
   CFLAGS="${CFLAGS:-${RPM_OPT_FLAGS}}" LDFLAGS="${LDFLAGS:-${RPM_LD_FLAGS}}"\\\
-  %{__python3} -m venv %{__pyvenv_root} %{?*}
+  %{__python3} -m venv %{buildroot}/%{__pyvenv_root} %{?*}
   %{__pyvenvpip3} install wheel $PYVENV_WHEEL_ARGS
   sleep 1
 }
 
-%pyvenv_build() %{expand:\\\
-  
+%pyvenv_build_3() %{expand:\\\
   CFLAGS="${CFLAGS:-${RPM_OPT_FLAGS}}" LDFLAGS="${LDFLAGS:-${RPM_LD_FLAGS}}"\\\
-  %{__pyvenv} %{py_setup} %{?py_setup_args} bdist_wheel %{?*}
+  %{__pyvenv3} %{py_setup} %{?py_setup_args} bdist_wheel %{?*}
   sleep 1
 }
 
-%pyvenv_install() %{expand:\\\
+%pyvenv_install_3() %{expand:\\\
   %{__pyvenvpip3} install -I dist/*.whl  $PYVENV_PIP_ARGS
-  find  %{__pyvenv_root} -type f -print0 | xargs -0 sed -i 's~%{buildroot}~~'
+  find %{buildroot}/%{__pyvenv_root} -type f -print0 | xargs -0 sed -i 's~%{buildroot}~~'
+}
+
+%pyvenv_create_2() %{expand:\\\
+  mkdir -p %{buildroot}/%{__pyvenv_root}
+  CFLAGS="${CFLAGS:-${RPM_OPT_FLAGS}}" LDFLAGS="${LDFLAGS:-${RPM_LD_FLAGS}}"\\\
+  virtualenv -p %{__python2} %{buildroot}/%{__pyvenv_root} %{?*}
+  %{__pyvenvpip2} install wheel $PYVENV_WHEEL_ARGS
+  sleep 1
+}
+
+%pyvenv_build_2() %{expand:\\\
+  CFLAGS="${CFLAGS:-${RPM_OPT_FLAGS}}" LDFLAGS="${LDFLAGS:-${RPM_LD_FLAGS}}"\\\
+  %{__pyvenv2} %{py_setup} %{?py_setup_args} bdist_wheel %{?*}
+  sleep 1
+}
+
+%pyvenv_install_2() %{expand:\\\
+  %{__pyvenvpip2} install -I dist/*.whl  $PYVENV_PIP_ARGS
+  find %{buildroot}/%{__pyvenv_root} -type f -print0 | xargs -0 sed -i 's~%{buildroot}~~'
 }
